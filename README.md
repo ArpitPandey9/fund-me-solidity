@@ -1,194 +1,115 @@
-# Fund Me Solidity
+# fund-me-solidity
 
-Protocol-focused Solidity project built through the Cyfrin Updraft **Fund Me** module, covering ETH funding flows, price-feed based minimums, fallback/receive behavior, and contract-level state transitions.
+Foundry-based Solidity project for the FundMe module, focused on:
 
----
+- ETH funding with minimum USD validation
+- Chainlink price feed integration
+- owner-restricted withdrawals
+- gas-optimized withdrawal flow
+- deployment and interaction scripts
+- mock-based local testing
 
-## What This Repository Covers
+## What this repository contains
 
-This repository contains Solidity contracts that helped me move from simple storage into more realistic contract behavior.
+### 1. FundMe contract
+Core protocol contract covering:
+- funding with ETH
+- minimum USD threshold
+- funder tracking
+- mapping-based contribution accounting
+- owner-only withdraw
+- cheaper withdraw optimization
 
-Main ideas covered in this repo:
+### 2. PriceConverter library
+Library used to:
+- read ETH/USD price data from Chainlink
+- convert ETH amount to USD-denominated value
+- support funding threshold checks
 
-- funding a contract with ETH
-- enforcing a minimum USD value using a price feed
-- tracking funders and funded amounts
-- restricting withdrawals to the owner
-- understanding `receive()` and `fallback()`
-- understanding overflow behavior with `unchecked`
+### 3. HelperConfig script
+Configuration logic for:
+- Sepolia price feed address
+- local Anvil mock deployment
+- environment-specific setup
 
----
+### 4. Deploy script
+Deployment automation for:
+- setting up config
+- injecting price feed address
+- deploying FundMe
 
-## Contracts in This Repository
+### 5. Interaction scripts
+Scripts to:
+- fund the most recently deployed FundMe contract
+- withdraw from the most recently deployed FundMe contract
 
-### 1. `FundMe.sol`
+### 6. Mock contracts
+Local testing support through:
+- `MockV3Aggregator`
 
-This is the main contract in the repository.
+## Project structure
 
-It allows users to fund the contract with ETH only if the ETH sent is worth at least a minimum USD amount.
+### Source
+- `src/FundMe.sol`
+- `src/PriceConverter.sol`
 
-Main concepts used:
+### Scripts
+- `script/DeployFundMe.s.sol`
+- `script/HelperConfig.s.sol`
+- `script/Interactions.s.sol`
+
+### Tests
+- `test/FundMe.t.sol`
+- `test/mocks/MockV3Aggregator.sol`
+
+## Test coverage
+
+This checkpoint includes tests for:
+- minimum USD constant
+- owner assignment
+- funding revert when ETH is too low
+- funder array update
+- mapping update after funding
+- repeated funding accumulation
+- owner-only withdraw restriction
+- withdraw with a single funder
+- withdraw with multiple funders
+- cheaperWithdraw with multiple funders
+
+## How to run locally
+
+```bash
+forge build
+forge test
+forge test -vvvv
+```
+
+## Key concepts practiced
 
 - payable functions
-- custom errors
-- immutable owner
+- msg.sender / msg.value
+- Chainlink price feeds
+- libraries
 - mappings
-- arrays
+- dynamic arrays
+- constructor-based ownership
 - modifiers
-- withdrawing ETH from the contract
+- external value transfer
+- gas optimization with memory caching
+- Foundry scripts
+- local mocks
+- integration-style testing
 
-### 2. `PriceConverter.sol`
+## Current milestone
 
-This is a Solidity library used by `FundMe.sol`.
+This repository now represents a Foundry-based FundMe checkpoint with:
+- working contract logic
+- deployment/config/interaction scripts
+- local mock setup
+- strong automated test coverage
 
-It reads the ETH/USD price feed and converts ETH amounts into USD-style values so the contract can check whether the user sent enough ETH.
+## Next direction
 
-Main concepts used:
-
-- library
-- price-feed based conversion
-- working with decimals
-- reusable helper functions
-
-### 3. `FallbackExample.sol`
-
-This contract is a small practice contract used to understand what happens when ETH is sent to a contract in different ways.
-
-Main concepts used:
-
-- `receive()`
-- `fallback()`
-- payable behavior
-- how contracts react to unexpected calls
-
-### 4. `SafeMathTester.sol`
-
-This is a small practice contract used to understand arithmetic overflow behavior in Solidity and how `unchecked` changes that behavior.
-
-Main concepts used:
-
-- overflow
-- `unchecked`
-- Solidity 0.8+ arithmetic behavior
-
----
-
-## Project Structure
-
-- `FundMe.sol`
-- `PriceConverter.sol`
-- `FallbackExample.sol`
-- `SafeMathTester.sol`
-
----
-
-## Deep Concept Summary
-
-### Fund Flow
-
-A user sends ETH to the `fund()` function.  
-The contract checks whether the ETH sent is worth at least the minimum USD value.  
-If the condition passes, the user's address is stored and their funded amount is updated.
-
-### Price Conversion
-
-The contract does not directly compare ETH with USD.  
-Instead, it uses a helper library to:
-
-1. get the ETH price
-2. scale it properly
-3. convert the ETH amount into a USD-based value
-
-### Withdrawal Logic
-
-Only the contract owner should be able to withdraw funds.  
-The contract enforces this using ownership logic and a modifier.
-
-### Fallback / Receive Behavior
-
-Contracts can behave differently depending on how ETH or function calls are sent to them.  
-This repository includes a small practice file to understand:
-
-- when `receive()` is triggered
-- when `fallback()` is triggered
-
-### Overflow Behavior
-
-Solidity 0.8+ checks arithmetic overflow by default.  
-The `SafeMathTester` contract helps show what happens when arithmetic is placed inside an `unchecked` block.
-
----
-
-## How to Run in Remix
-
-1. Open Remix IDE
-2. Upload or create these Solidity files
-3. Compile the contracts with a compatible Solidity compiler version
-4. Deploy `FundMe.sol`
-5. Interact with:
-   - `fund()` to send ETH
-   - `withdraw()` to withdraw contract funds as the owner
-6. Deploy `FallbackExample.sol` separately to test `receive()` and `fallback()`
-7. Deploy `SafeMathTester.sol` separately to test overflow behavior
-
----
-
-## What I Learned
-
-From this repository, I learned:
-
-- how ETH funding works in a Solidity contract
-- how a minimum funding threshold can be enforced
-- how helper libraries improve code reuse
-- how ownership restrictions protect withdrawals
-- how mappings and arrays are used together
-- how fallback and receive functions behave
-- how unchecked arithmetic works in Solidity
-
----
-
-## Protocol-Level Thinking
-
-This repository is important because it starts moving from basic storage contracts to protocol-style thinking.
-
-Questions this repo helps me think about:
-
-- what state does the contract store?
-- who is allowed to change that state?
-- what conditions must be true before a state change is allowed?
-- how does the contract depend on external data like price feeds?
-- what can go wrong if contract assumptions fail?
-
-This is the layer where Solidity stops being only syntax and starts becoming system design.
-
----
-
-## Current Limitation
-
-This repository is still a learning-stage implementation.
-
-It is useful for understanding:
-
-- contract state
-- funding flow
-- ownership checks
-- price-based validation
-
-But it is not yet positioned as a production-ready audited protocol.
-
----
-
-## Next Step
-
-My next step is to go deeper into:
-
-- full `FundMe` contract understanding
-- Remix interaction clarity
-- transaction flow
-- protocol risks and edge cases
-- stronger Solidity foundations before moving further
-
----
-**Arpit Pandey**
-
-GitHub: [ArpitPandey9](https://github.com/ArpitPandey9)
+- script flow polish
+- protocol-level explanation improvements
+- stronger portfolio signal before outreach
